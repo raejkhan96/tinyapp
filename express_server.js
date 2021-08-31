@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080;
 
 function generateRandomString() {
-  return (Math.random().toString(20).substr(2, length));
+  return (Math.random().toString(20).substr(2, 6));
 };
 
 app.set('view engine', 'ejs');
@@ -18,16 +18,31 @@ const urlDatabase = {
 
 app.post('/urls', (req, res) => {
   console.log(req.body);
-  res.send('Ok');
+  // { longURL: 'http://www.doggo.com' }
+  // console.log(req.body.longURL);
+  key = generateRandomString();
+  urlDatabase[key] = req.body.longURL;
+  //console.log(urlDatabase);
+  res.redirect(`/urls/${key}`);
+  //res.send('Ok');
 });
 
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL)
+});
+
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.longURL };
+  const templateVars = { shortURL: req.params.shortURL , longURL: urlDatabase[req.params.shortURL] };
+  console.log(templateVars);
+  //console.log(req.body.longURL);
   res.render('urls_show', templateVars);
+  //const longURL = templateVars[longURL];
+  //res.redirect(longURL);
 });
 
 app.get('/urls', (req, res) => {
