@@ -27,17 +27,45 @@ app.post('/urls', (req, res) => {
   //res.send('Ok');
 });
 
+//:id is the wildcard
+app.post('/urls/:id', (req, res) => {
+  console.log(req.params);
+  // console.log(req.body);
+  const shortURL = req.params.id;
+  const longURL = req.body.longURL;
+  // console.log('hello');
+  console.log(shortURL);
+  console.log(longURL);
+  console.log(urlDatabase);
+  urlDatabase[shortURL] = longURL;
+  console.log(urlDatabase);
+  res.redirect('/urls');
+});
+
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
-app.get('u/:shortURL', (req, res) => {
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+});
+
+// app.post('/urls/:shortURL/edit', (req, res) => {
+//   //const longURL = req.params.longURL;
+
+//   res.redirect('/u/:shortURL');
+// });
+
+app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL)
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL , longURL: urlDatabase[req.params.shortURL] };
+  console.log('hello');
   console.log(templateVars);
   //console.log(req.body.longURL);
   res.render('urls_show', templateVars);
