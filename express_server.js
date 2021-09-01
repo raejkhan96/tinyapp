@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
+const cookieParser = require('cookie-parser');
 
 function generateRandomString() {
   return (Math.random().toString(20).substr(2, 6));
@@ -11,6 +12,8 @@ app.set('view engine', 'ejs');
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.use(cookieParser());
+
 const urlDatabase = {
   'b2xVn2' : 'http://www.lighthouselabs.ca',
   '9sm5xK' : 'http://www.google.com'
@@ -18,32 +21,36 @@ const urlDatabase = {
 
 app.post('/urls', (req, res) => {
   console.log(req.body);
-  // { longURL: 'http://www.doggo.com' }
-  // console.log(req.body.longURL);
   key = generateRandomString();
   urlDatabase[key] = req.body.longURL;
-  //console.log(urlDatabase);
   res.redirect(`/urls/${key}`);
-  //res.send('Ok');
+});
+
+app.post('/login', (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect('/urls');
+});
+
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
 });
 
 //:id is the wildcard
 app.post('/urls/:id', (req, res) => {
   console.log(req.params);
-  // console.log(req.body);
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  // console.log('hello');
-  console.log(shortURL);
-  console.log(longURL);
-  console.log(urlDatabase);
   urlDatabase[shortURL] = longURL;
-  console.log(urlDatabase);
   res.redirect('/urls');
 });
 
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = { 
+    username: req.cookies['username'],
+    urls: urlDatabase
+  };
+  res.render('urls_new', templateVars);
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
@@ -52,12 +59,6 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect('/urls');
 });
 
-// app.post('/urls/:shortURL/edit', (req, res) => {
-//   //const longURL = req.params.longURL;
-
-//   res.redirect('/u/:shortURL');
-// });
-
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL)
@@ -65,16 +66,14 @@ app.get('/u/:shortURL', (req, res) => {
 
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL , longURL: urlDatabase[req.params.shortURL] };
-  console.log('hello');
-  console.log(templateVars);
-  //console.log(req.body.longURL);
   res.render('urls_show', templateVars);
-  //const longURL = templateVars[longURL];
-  //res.redirect(longURL);
 });
 
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    username: req.cookies['username'],
+    urls: urlDatabase
+  };
   res.render('urls_index', templateVars);
 });
 
