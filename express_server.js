@@ -78,17 +78,27 @@ app.post('/urls', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  console.log(req.body.username);
-  for (const id in users) {
-    if(users[id].email === (req.body.username)) {
-      user = req.body.username;
+  console.log('/login');
+  console.log('!!!!!!!!!!!')
+  console.log(req.body);
+  console.log(users);
+  for (const name in users) {
+    console.log(users[name].email, req.body.email)
+    if(users[name].email === (req.body.email)) {
+      user_id = users[name].id;
+      user = req.body.email;
+      password = req.body.password;
+    } else {
+      console.log('ERROR');
     }
   }
-  console.log(user);
+  console.log(user_id, user, password);
   const templateVars = {
-    user: user,
+    user_id: user_id,
+    user: user, 
+    password: password
   }
-  res.cookie('user_id', templateVars);
+  res.cookie('user_id', user_id);
   res.redirect('/urls');
 });
 
@@ -118,6 +128,22 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
+app.get('/urls', (req, res) => {
+  console.log(req.cookies);
+  const user = users[req.cookies.user_id];
+  console.log(user);
+  const templateVars = { 
+    user_id: users[req.cookies['user_id']],
+    user: user,
+    urls: urlDatabase,
+  };
+  res.render('urls_index', templateVars);
+});
+
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 app.get('/urls/new', (req, res) => {
   const user = users[req.cookies.user_id];
   const templateVars = { 
@@ -142,17 +168,7 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
-app.get('/urls', (req, res) => {
-  console.log(req.cookies);
-  const user = users[req.cookies.user_id];
-  console.log(user);
-  const templateVars = { 
-    user_id: users[req.cookies['user_id']],
-    user: user,
-    urls: urlDatabase,
-  };
-  res.render('urls_index', templateVars);
-});
+
 
 // USELESS ---------------------------------
 
