@@ -10,14 +10,16 @@
         <a class = 'nav-item nav-link' href = '/urls/new'>Create New URL</a>
       </div>
     </div>
-    <% if(typeof username === 'string') { %>
-      <b> Logged in as: <%= username %> </b>
+    
+    <!-- <%= JSON.stringify(locals) %> -->
+    <% if(locals.user) { %>
+      <b> Logged in as: <%= user.email %> </b>
       <form method = 'POST' action = "/logout">
               <button type = 'submit'> Logout </button>
       </form>
     <% } else { %>
     <form method = 'POST' action = "/login">
-      <!-- <label for = 'longURL'>New URL:</label> -->
+      <label for = 'longURL'></label>
       <input type = 'text' id = 'username' name = 'username'> 
             <button type = 'submit'> Sign in </button>
     </form>
