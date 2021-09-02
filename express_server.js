@@ -33,6 +33,34 @@ const createNewUser = function (userId, email, password) {
   return {error: null, data: {userId, email, password}};
 }
 
+const checkExistingUser = function (email, password) {
+  if(!email || !password) {
+    return { status: 403, error: 'There is an empty field', data: null };
+  }
+
+  for (const name in users) {
+    // console.log(users[name])
+    console.log(users[name].email, email, users[name].password, password)
+    if(users[name].email === (email)){
+      console.log(users[name].email, email)
+      if(users[name].password === (password)) {
+        console.log(users[name].password, password)
+        user_id = users[name].id;
+        user = email;
+        password = password;
+        const templateVars = {
+          user_id: user_id,
+          user: user, 
+          password: password
+        }
+        return { error: null, data: templateVars};
+      } else {
+      return {  status: 403, error: 'Incorrect password', data: null };
+      }
+    }
+  }
+}
+
 // 'DATABASE'/OBJECTS --------------------------------
 
 const urlDatabase = {
@@ -82,22 +110,20 @@ app.post('/login', (req, res) => {
   console.log('!!!!!!!!!!!')
   console.log(req.body);
   console.log(users);
-  for (const name in users) {
-    console.log(users[name].email, req.body.email)
-    if(users[name].email === (req.body.email)) {
-      user_id = users[name].id;
-      user = req.body.email;
-      password = req.body.password;
-    } else {
-      console.log('ERROR');
-    }
+
+  const email = req.body.email;
+  const password = req.body.password;
+
+  console.log(email);
+  console.log(password);
+
+  const userVal = checkExistingUser(email, password);
+  if (userVal.error) {
+    return res.send(userVal.error)
   }
+
   console.log(user_id, user, password);
-  const templateVars = {
-    user_id: user_id,
-    user: user, 
-    password: password
-  }
+  
   res.cookie('user_id', user_id);
   res.redirect('/urls');
 });
