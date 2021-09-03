@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 
 app.set('view engine', 'ejs');
 
@@ -95,7 +96,8 @@ const checkExistingUser = function (email, password) {
     console.log(users[name].email, email, users[name].password, password)
     if(users[name].email === (email)){
       console.log(users[name].email, email)
-      if(users[name].password === (password)) {
+      if (bcrypt.compareSync(password, users[name].password)) {
+      //if(users[name].password === (bcrypt.hashSync(password, 10))) {
         console.log(users[name].password, password)
         user_id = users[name].id;
         user = email;
@@ -121,7 +123,12 @@ app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  const userVal = createNewUser(userId, email, password);
+  const hashedPassword = bcrypt.hashSync(password, 10);
+ 
+  console.log('/REGISTER')
+  console.log(hashedPassword)
+
+  const userVal = createNewUser(userId, email, hashedPassword);
   if (userVal.error) {
     return res.send(userVal.error)
   }
@@ -154,9 +161,11 @@ app.post('/login', (req, res) => {
 
   const email = req.body.email;
   const password = req.body.password;
+  //const hashedPassword = req.body.hashedPassword;
 
   console.log(email);
   console.log(password);
+  //console.log(hashedPassword);
 
   const userVal = checkExistingUser(email, password);
   console.log(userVal);
