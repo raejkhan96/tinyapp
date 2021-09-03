@@ -57,15 +57,27 @@ const checkExistingUser = function (email, password) {
       } else {
       return {  status: 403, error: 'Incorrect password', data: null };
       }
-    }
+    } 
   }
+  return { status: 403, error: 'User not registered', data: null};  
 }
 
 // 'DATABASE'/OBJECTS --------------------------------
 
+// const urlDatabase = {
+//   'b2xVn2' : 'http://www.lighthouselabs.ca',
+//   '9sm5xK' : 'http://www.google.com'
+// };
+
 const urlDatabase = {
-  'b2xVn2' : 'http://www.lighthouselabs.ca',
-  '9sm5xK' : 'http://www.google.com'
+  b6UTxQ: {
+      longURL: "https://www.tsn.ca",
+      userID: "aJ48lW"
+  },
+  i3BoGr: {
+      longURL: "https://www.google.ca",
+      userID: "aJ48lW"
+  }
 };
 
 const users = { 
@@ -99,9 +111,17 @@ app.post('/register', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
+  if (!req.cookies['user_id']) {
+    res.send('Error: User is not logged in')
+  }
+  console.log('/URLS!!!!!')
   console.log(req.body);
+  console.log(req.params)
   key = generateRandomString();
-  urlDatabase[key] = req.body.longURL;
+  urlDatabase[key] = {
+    longURL: req.body.longURL,
+    userID: req.cookies['user_id'],
+  }
   res.redirect(`/urls/${key}`);
 });
 
@@ -118,6 +138,7 @@ app.post('/login', (req, res) => {
   console.log(password);
 
   const userVal = checkExistingUser(email, password);
+  console.log(userVal);
   if (userVal.error) {
     return res.send(userVal.error)
   }
@@ -138,7 +159,11 @@ app.post('/urls/:id', (req, res) => {
   console.log(req.params);
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  console.log('URLS/ID!!!!')
+  console.log('shortURL: ', shortURL)
+  console.log('longURL: ',longURL)
+  urlDatabase[shortURL].longURL = longURL;
+
   res.redirect('/urls');
 });
 
@@ -180,7 +205,11 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  if(!urlDatabase[req.params.shortURL]) {
+    res.render('error')
+    return;
+  }
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL)
 });
 
