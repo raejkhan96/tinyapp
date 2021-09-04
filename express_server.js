@@ -17,132 +17,125 @@ app.use(cookieSession({
 
   // Cookie Options ?
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 // 'DATABASE'/OBJECTS --------------------------------
 
 const urlDatabase = {
   b6UTxQ: {
-      longURL: "https://www.tsn.ca",
-      userID: "aJ48lW"
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
   },
   i3BoGr: {
-      longURL: "https://www.google.ca",
-      userID: "aJ48lW"
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
   }
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "1"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "1"
   }
-}
+};
 
 // FUNCTIONS ---------------------------------------------------------
 
-const getUser = function (req) {
+const getUser = function(req) {
   console.log('GET USER FUNCTION: ', req.session.user_id);
   const user = req.session.user_id ? users[req.session.user_id] : null;
   return user;
-}
+};
 
-const urlsForUser = function (id) {
+const urlsForUser = function(id) {
   const filteredDB = {};
 
   for (let key in urlDatabase) {
     if (id === urlDatabase[key].userID) {
-      filteredDB[key] = urlDatabase[key]
+      filteredDB[key] = urlDatabase[key];
     }
   }
 
   return filteredDB;
 };
 
-function generateRandomString() {
+const generateRandomString = function() {
   return (Math.random().toString(20).substr(2, 6));
 };
 
-const createNewUser = function (userId, email, password) {
-  if(!email || !password) {
+const createNewUser = function(userId, email, password) {
+  if (!email || !password) {
     return { status: 400, error: 'There is an empty field', data: null };
   }
+  const hashedPassword = bcrypt.hashSync(password, 10);
   for (const id in users) {
-    if(users[id].email === email) {
+    if (users[id].email === email) {
       return {  status: 400, error: 'This email is already in use', data: null };
     }
   }
   users[userId] = {
     id: userId,
     email: email,
-    password: password
-  } 
+    password: hashedPassword
+  };
   console.log(users);
-  return {error: null, data: {userId, email, password}};
-}
+  return {error: null, data: {userId, email, hashedPassword}};
+};
 
 
 // POSTS -------------------------------------
 
 app.post('/register', (req, res) => {
-  console.log(req.body);
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
- 
-  console.log('/REGISTER')
-  console.log(hashedPassword)
-
-  const userVal = createNewUser(userId, email, hashedPassword);
+  const userVal = createNewUser(userId, email, password);
+  
   if (userVal.error) {
-    return res.send(userVal.error)
+    return res.send(userVal.error);
   }
-  console.log(userId, email, password)
+
   req.session.user_id = userId;
-  console.log(users);
-  res.redirect(`/urls`)
+  res.redirect(`/urls`);
 });
 
 app.post('/urls', (req, res) => {
   if (!req.session['user_id']) {
-    res.send('Error: User is not logged in ')
+    res.send('Error: User is not logged in ');
   }
-  console.log('/URLS!!!!!')
-  console.log(req.body);
-  console.log(req.params)
-  key = generateRandomString();
+
+  const key = generateRandomString();
   urlDatabase[key] = {
     longURL: req.body.longURL,
     userID: req.session['user_id'],
-  }
-  res.redirect(`/urls/${key}`);
+  };
+  
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
-  console.log('/login');
-  console.log('!!!!!!!!!!!')
-  console.log(req.body);
-  console.log(users);
-
   const email = req.body.email;
   const password = req.body.password;
-  if(!email || !password) {
-    res.status(403).send('Error: There is an empty field')
+
+  if (!email || !password) {
+    res.status(403).send('Error: There is an empty field');
     return;
   }
-  console.log(email);
-  console.log(password);
+
   const user = getUserByEmail(email, users);
 
+  if (typeof user === 'undefined') {
+    res.status(403).send('Error: Incorrect username or password');
+    return;
+  }
   if (!bcrypt.compareSync(password, user.password)) {
-    res.status(403).send('Error: Incorrect password')
+    res.status(403).send('Error: Incorrect password');
     return;
   }
 
@@ -157,21 +150,17 @@ app.post('/logout', (req, res) => {
 
 //:id is the wildcard
 app.post('/urls/:id', (req, res) => {
-
-  if (!req.session['user_id']) {  
+  if (!req.session['user_id']) {
     const templateVars = {
       msg: 'Error: Does Not Exist'
-    }
-    res.render('error', templateVars)
+    };
+    res.render('error', templateVars);
     return;
   }
 
-  console.log(req.params);
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  console.log('URLS/ID!!!!')
-  console.log('shortURL: ', shortURL)
-  console.log('longURL: ',longURL)
+
   urlDatabase[shortURL].longURL = longURL;
 
   res.redirect('/urls');
@@ -182,8 +171,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   if (!req.session['user_id']) {
     const templateVars = {
       msg: 'Error: Does Not Exist'
-    }
-    res.render('error', templateVars)
+    };
+    res.render('error', templateVars);
     return;
   }
   
@@ -197,8 +186,9 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 app.get('/register', (req, res) => {
   const user = getUser(req);
-  if(user) {
-    res.redirect('/urls')
+
+  if (user) {
+    res.redirect('/urls');
     return;
   }
 
@@ -207,14 +197,14 @@ app.get('/register', (req, res) => {
 
 app.get('/urls', (req, res) => {
   const user = getUser(req);
-  if(!user) {
-    res.send('Error: Not logged in')
+  if (!user) {
+    res.send('Error: Not logged in');
     return;
   }
 
-  const filteredDB = urlsForUser(user.id) 
+  const filteredDB = urlsForUser(user.id);
 
-  const templateVars = { 
+  const templateVars = {
     user_id: users[req.session['user_id']],
     user: user,
     urls: filteredDB,
@@ -229,12 +219,12 @@ app.get('/login', (req, res) => {
 
 app.get('/urls/new', (req, res) => {
   const user = getUser(req);
-  if(!user) {
-    res.redirect('/login')
+  if (!user) {
+    res.redirect('/login');
     return;
   }
 
-  const templateVars = { 
+  const templateVars = {
     user: user,
     urls: urlDatabase
   };
@@ -244,15 +234,15 @@ app.get('/urls/new', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
     
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL)
+  res.redirect(longURL);
 
 });
 
 app.get('/urls/:shortURL', (req, res) => {
 
   const user = getUser(req);
-  if(!user) {
-    res.send('Error: Not logged in')
+  if (!user) {
+    res.send('Error: Not logged in');
     return;
   }
   
@@ -262,8 +252,8 @@ app.get('/urls/:shortURL', (req, res) => {
     return;
   }
 
-  const templateVars = { 
-    shortURL: req.params.shortURL, 
+  const templateVars = {
+    shortURL: req.params.shortURL,
     user: user,
     longURL: url,
   };
@@ -282,7 +272,7 @@ app.get('/urls.json', (req, res) => {
 });
 
 app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n')
+  res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
 app.listen(PORT, () => {
