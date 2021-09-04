@@ -48,7 +48,6 @@ const users = {
 // FUNCTIONS ---------------------------------------------------------
 
 const getUser = function(req) {
-  console.log('GET USER FUNCTION: ', req.session.user_id);
   const user = req.session.user_id ? users[req.session.user_id] : null;
   return user;
 };
@@ -84,7 +83,7 @@ const createNewUser = function(userId, email, password) {
     email: email,
     password: hashedPassword
   };
-  console.log(users);
+ 
   return {error: null, data: {userId, email, hashedPassword}};
 };
 
